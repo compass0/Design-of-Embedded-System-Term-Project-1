@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                         DotWrite(-2);
                     gameOver = true;
                     mRenderHandler.sendEmptyMessage(0);
-                    continue;
+//                    continue;
                 }
 
                 if(!mController.CollisionCheck(mController.CMD_DOWN,user.getUserX(),user.getUserY()+1,user.getSubX(),user.getSubY()+1)){
@@ -343,15 +343,30 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             tScore.setText("Score :"+score);
         }catch (Exception e){}
         //nextPuyo preview
-        nextImg11.setImageResource(normalChipset[user.nextBuffer[0][1]]);
-        nextImg12.setImageResource(normalChipset[user.nextBuffer[0][0]]);
-        nextImg21.setImageResource(normalChipset[user.nextBuffer[1][1]]);
-        nextImg22.setImageResource(normalChipset[user.nextBuffer[1][0]]);
+        if (!gameOver) {
+            nextImg11.setImageResource(normalChipset[user.nextBuffer[0][1]]);
+            nextImg12.setImageResource(normalChipset[user.nextBuffer[0][0]]);
+            nextImg21.setImageResource(normalChipset[user.nextBuffer[1][1]]);
+            nextImg22.setImageResource(normalChipset[user.nextBuffer[1][0]]);
+        }
 
-        if(gameOver)
+        if(gameOver) {
             gameoverimg.setVisibility(View.VISIBLE);
+            SSegmentWrite(0);
+            LcdWrite("", "");
+
+            //finishActivity(0);
+            Handler hd = new Handler();
+            hd.postDelayed(new splash(), 5000);
+        }
         else
             gameoverimg.setVisibility(View.INVISIBLE);
+    }
+
+    private class splash implements Runnable{
+        public void run(){
+            finish();
+        }
     }
 
     public void stacking(){
