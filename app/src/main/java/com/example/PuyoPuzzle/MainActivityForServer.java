@@ -31,7 +31,6 @@ public class MainActivityForServer extends AppCompatActivity {
     // KKT
     private ArrayList<Socket> sockets;
     private int member;
-    HashMap<Socket, String> socketMessageMap;
     //
 
 
@@ -102,7 +101,6 @@ public class MainActivityForServer extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // KKT
-        socketMessageMap = new HashMap<>();
         MyApplication myApp = (MyApplication) getApplication();
         member = myApp.getCurrentMember();
 
@@ -238,63 +236,51 @@ public class MainActivityForServer extends AppCompatActivity {
         }
     }
 
-    public void rendering(boolean stackmode){
+    public void rendering(boolean stackmode) {
         // KKT
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                //data send to another user
+                int[] senddata = new int[126];
+                int k=0;
+                for(int i=0;i<15;i++){
+                    for(int j=0;j<8;j++){
+                        senddata[k++] = gridState[i][j];
+                    }
+                }
 
-        //data send to another user
-        int[] senddata = new int[120];
-        int k=0;
-        for(int i=0;i<15;i++){
-            for(int j=0;j<8;j++){
-                senddata[k++] = gridState[i][j];
+                senddata[k++] = user.getUserX();
+                senddata[k++] = user.getUserY();
+                senddata[k++] = user.getSubX();
+                senddata[k++] = user.getSubY();
+                senddata[k++] = user.userCentColor;
+                senddata[k++] = user.userSubColor;
+
+
+                String senddata_s = Arrays.toString(senddata).replaceAll("[^0-9]","");
+
+                for(int i = 0; i<member-1; i++){
+                    Socket socket = sockets.get(i);
+                    Log.v("KKT", "액티비티 : rendering 안 socket 값 적절한가? : " + socket);
+                    try{
+                        Log.v("KKT", "액티비티 : 터진다1 : " + socket);
+                        final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                        Log.v("KKT", "액티비티 : 터진다2 : " + socket);
+                        out.write("1send" + "\n");
+                        Log.v("KKT", "액티비티 : 터진다3 : " + socket);
+                        Log.v("KKT", "액티비티 : 터진다4 : " + socket);
+                        out.write(senddata_s + "\n");
+                        Log.v("KKT", "액티비티 : 터진다5 : " + socket);
+                        Log.v("KKT", "액티비티 : 터진다6 : " + socket);
+                    }catch(IOException e){
+                        e.printStackTrace();
+                        Log.v("KKT", "서버쪽 메인 액티비티 : 설마 exception 내버린거??");
+                    }
+                }
             }
-        }
-
-        senddata[k++] = user.getUserX();
-        senddata[k++] = user.getUserY();
-        senddata[k++] = user.getSubX();
-        senddata[k++] = user.getSubY();
-        senddata[k++] = user.userCentColor;
-        senddata[k++] = user.userSubColor;
-
-
-        String senddata_s = Arrays.toString(senddata).replaceAll("[^0-9]","");
-
-        for(int i = 0; i<member-1; i++){
-            Socket socket = sockets.get(i);
-            try{
-                final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                out.write("1send" + "\n");
-                out.flush();
-
-                out.write(senddata_s + "\n");
-                out.flush();
-            }catch (Exception e){
-
-            }
-        }
-
-
-
-//        for(int i = 0; i<member-1; i++){
-//            try{
-//                Socket socket = sockets.get(i);
-//                final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//                String message = in.readLine();
-//                socketMessageMap.put(socket, message);
-//            }catch(IOException e){
-//                e.printStackTrace();
-//            }
-//
-//        }
-
-
-//        for(int i = 0; i<member-1; i++){
-//            Socket socket = sockets.get(i);
-//            final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-//            out.write("start" + "\n");
-//            out.flush();
-//        }
+        };
+        thread.start();
 
 //        //data send to another user
 //        int[] senddata = new int[120];

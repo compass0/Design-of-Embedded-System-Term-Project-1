@@ -76,7 +76,7 @@ public class SimpleServerThread extends Thread {
 //            e.printStackTrace();
 //        }
 //
-////        priorActivity.finish();
+////        priorActivity.();
 ////        Intent intent = new Intent(priorActivity, MainActivityForServer.class);
 ////        intent.putExtra("sockets", sockets);
 ////        intent.putExtra("member", currentMember);

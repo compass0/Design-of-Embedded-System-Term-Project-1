@@ -35,7 +35,6 @@ public class MainActivityForClient extends AppCompatActivity {
     private String message2;
     private String message3;
     private Socket socket;
-    HashMap<Socket, String> socketMessageMap;
     //
 
 
@@ -107,7 +106,6 @@ public class MainActivityForClient extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // KKT
-        socketMessageMap = new HashMap<>();
         MyApplication myApp = (MyApplication) getApplication();
         member = myApp.getCurrentMember();
 
@@ -127,6 +125,30 @@ public class MainActivityForClient extends AppCompatActivity {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
 
+
+//        fragmentManager = getFragmentManager();
+//        fragmentTransaction1 = fragmentManager.beginTransaction();
+//        fragmentTransaction1.replace(R.id.frame1, new OtherPlayerFrgClient(),"frag1").commit();
+//        fragmentTransaction2 = fragmentManager.beginTransaction();
+//        fragmentTransaction2.replace(R.id.frame2, new OtherPlayerFrg2Client(),"frag2").commit();
+//        fragmentTransaction3 = fragmentManager.beginTransaction();
+//        fragmentTransaction3.replace(R.id.frame3, new OtherPlayerFrg3Client(),"frag3").commit();
+        //--------------View initialization------------------------------------------
+        for(int i=2;i<14;i++)
+            for(int j=1;j<7;j++)
+                grid[i][j] = (ImageView) findViewById(gridID[i][j]);
+
+        mRenderHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                if(msg.what == 0)
+                    rendering(false);
+                else if(msg.what == 1)
+                    rendering(true);
+            }
+        };
+
+
         // KKT
         OtherPlayerFrgClient otherPlayerFrgClient = new OtherPlayerFrgClient();
         OtherPlayerFrg2Client otherPlayerFrg2Client = new OtherPlayerFrg2Client();
@@ -144,28 +166,13 @@ public class MainActivityForClient extends AppCompatActivity {
         bundle.putString("message3", message3);
         otherPlayerFrg3Client.setArguments(bundle);
 
-
         fragmentManager = getFragmentManager();
         fragmentTransaction1 = fragmentManager.beginTransaction();
-        fragmentTransaction1.replace(R.id.frame1, new OtherPlayerFrgClient(),"frag1").commit();
+        fragmentTransaction1.replace(R.id.frame1, otherPlayerFrgClient,"frag1").commit();
         fragmentTransaction2 = fragmentManager.beginTransaction();
-        fragmentTransaction2.replace(R.id.frame2, new OtherPlayerFrg2Client(),"frag2").commit();
+        fragmentTransaction2.replace(R.id.frame2, otherPlayerFrg2Client,"frag2").commit();
         fragmentTransaction3 = fragmentManager.beginTransaction();
-        fragmentTransaction3.replace(R.id.frame3, new OtherPlayerFrg3Client(),"frag3").commit();
-        //--------------View initialization------------------------------------------
-        for(int i=2;i<14;i++)
-            for(int j=1;j<7;j++)
-                grid[i][j] = (ImageView) findViewById(gridID[i][j]);
-
-        mRenderHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                if(msg.what == 0)
-                    rendering(false);
-                else if(msg.what == 1)
-                    rendering(true);
-            }
-        };
+        fragmentTransaction3.replace(R.id.frame3, otherPlayerFrg3Client,"frag3").commit();
 
         tScore = (TextView)findViewById(R.id.score);
         nextImg11 = (ImageView)findViewById(R.id.nextpuyo11);
@@ -263,57 +270,65 @@ public class MainActivityForClient extends AppCompatActivity {
 
     public void rendering(boolean stackmode){
 
-        //data send to another user
-        int[] senddata = new int[120];
-        int k=0;
-        for(int i=0;i<15;i++){
-            for(int j=0;j<8;j++){
-                senddata[k++] = gridState[i][j];
+        Thread thread = new Thread(){
+            @Override
+            public void run() {
+                //data send to another user
+                int[] senddata = new int[126];
+                int k=0;
+                for(int i=0;i<15;i++){
+                    for(int j=0;j<8;j++){
+                        senddata[k++] = gridState[i][j];
+                    }
+                }
+
+                senddata[k++] = user.getUserX();
+                senddata[k++] = user.getUserY();
+                senddata[k++] = user.getSubX();
+                senddata[k++] = user.getSubY();
+                senddata[k++] = user.userCentColor;
+                senddata[k++] = user.userSubColor;
+
+
+                String senddata_s = Arrays.toString(senddata).replaceAll("[^0-9]","");
+
+                // KKT
+                MyApplication myApp = (MyApplication) getApplication();
+                socket = myApp.getServerSocket();
+                Log.v("KKT", "클라이언트쪽 액티비티 받아온 소켓 : "+ socket);
+                try{
+                    final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                    out.write(senddata_s + "\n");
+                    out.flush();
+                }catch (IOException e){
+                    e.printStackTrace();
+                    Log.v("KKT", "클라이언트쪽 메인 액티비티 : 설마 exception 내버린거??");
+                }
+
+                for(int i =0; i<member-1; i++){
+                    try { // 데이터 수신부
+                        final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        String message = in.readLine();
+
+                        if(message.equals("1send")){
+                            message1 = in.readLine();
+                        }
+
+                        else if(message.equals("2send")){
+                            message2 = in.readLine();
+                        }
+
+                        else if(message.equals("3send")){
+                            message3 = in.readLine();
+                        }
+
+                    }catch(Exception e){
+                        //
+                    }
+                }
             }
-        }
-
-        senddata[k++] = user.getUserX();
-        senddata[k++] = user.getUserY();
-        senddata[k++] = user.getSubX();
-        senddata[k++] = user.getSubY();
-        senddata[k++] = user.userCentColor;
-        senddata[k++] = user.userSubColor;
-
-
-        String senddata_s = Arrays.toString(senddata).replaceAll("[^0-9]","");
-
-        // KKT
-        MyApplication myApp = (MyApplication) getApplication();
-        socket = myApp.getServerSocket();
-        try{
-            final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            out.write(senddata_s + "\n");
-        }catch (Exception e){
-
-        }
-
-        for(int i =0; i<member-1; i++){
-            try { // 데이터 수신부
-                final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                String message = in.readLine();
-
-                if(message.equals("1send")){
-                    String message1 = in.readLine();
-                }
-
-                else if(message.equals("2send")){
-                    String message2 = in.readLine();
-                }
-
-                else if(message.equals("3send")){
-                    String message3 = in.readLine();
-                }
-
-            }catch(Exception e){
-                //
-            }
-        }
-
+        };
+        thread.start();
 
 //        for(int i = 0; i<member-1; i++){
 //            try{
@@ -425,7 +440,7 @@ public class MainActivityForClient extends AppCompatActivity {
             SSegmentWrite(0);
             LcdWrite("", "");
 
-            //finishActivity(0);
+            //Activity(0);
             Handler hd = new Handler();
             hd.postDelayed(new splash(), 5000);
         }

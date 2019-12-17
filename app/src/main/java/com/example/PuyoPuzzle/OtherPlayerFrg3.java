@@ -144,6 +144,9 @@ public class OtherPlayerFrg3 extends Fragment {
 
                     Socket socket = sockets.get(i);
                     final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                    out.write("3send" + "\n");
+                    out.flush();
+
                     out.write(message + "\n");
                     out.flush();
 

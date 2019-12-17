@@ -4,12 +4,14 @@ import android.app.Fragment;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -20,6 +22,7 @@ public class OtherPlayerFrg extends Fragment {
     private String message;
     private ArrayList<Socket> sockets;
     private int member;
+    private MyApplication myApp;
     View v;
 
     ImageView[][] grid = new ImageView[15][8];
@@ -61,6 +64,8 @@ public class OtherPlayerFrg extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         v= inflater.inflate(R.layout.other1, container, false);
+
+        Log.v("KKT", "프레그먼트가 실행되기는 할까??: ");
 
         for (int i=0;i<15;i++) // State Initialization
             for(int j=0;j<8;j++) {
@@ -112,46 +117,66 @@ public class OtherPlayerFrg extends Fragment {
     }
 
     public void rendering(boolean stackmode){
-        MyApplication myApp = (MyApplication) this.getActivity().getApplication();
-        ArrayList<Socket> sockets = myApp.getSockets();
-        member = myApp.getCurrentMember();
-        try { // 데이터 수신부
 
-            Socket socket = sockets.get(0);
-            final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            message = in.readLine();
+        myApp = (MyApplication) this.getActivity().getApplication();
+        Thread thread = new Thread(){
+            @Override
+            public void run() {
+                Log.v("KKT", "서버쪽 프레그먼트 : rendering이 호출되기는 할까??");
+                ArrayList<Socket> sockets = myApp.getSockets();
+                Log.v("KKT", "서버쪽 프레그먼트 : sockets 잘 받아올까? : " + sockets);
 
-            String[] revdata = message.split("");
-            int k = 0;
-            for (int i = 0; i < 15; i++)
-                for (int j = 0; j < 8; j++)
-                    gridState[i][j] = Integer.parseInt(revdata[k++]);
-            revUserX = Integer.parseInt(revdata[k++]);
-            revUserY = Integer.parseInt(revdata[k++]);
-            revUserSubX = Integer.parseInt(revdata[k++]);
-            revUserSubY = Integer.parseInt(revdata[k++]);
-            revUserCentC = Integer.parseInt(revdata[k++]);
-            revUserSubC = Integer.parseInt(revdata[k++]);
+                member = myApp.getCurrentMember();
+                try { // 데이터 수신부
 
+                    Socket socket = sockets.get(0);
+                    final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    message = in.readLine();
+                    Log.v("KKT", "서버쪽 프레그먼트 : 리드라인한게 없는건가?? " + message);
+                    Log.v("KKT", "메시지가 온다 : " + message);
+                    while( (message = in.readLine())!=null ){
+//                        try{
+//                            String[] revdata = message.split("");
+//                        }catch(Exception e){
+//                            String[] revdata = message.split("");
+//                        }
+                        int k = 0;
+                        for (int i = 0; i < 15; i++)
+                            for (int j = 0; j < 8; j++)
+                                gridState[i][j] = Character.getNumericValue(message.charAt(k++));
+                        revUserX = Character.getNumericValue(message.charAt(k++));
+                        revUserY = Character.getNumericValue(message.charAt(k++));
+                        revUserSubX = Character.getNumericValue(message.charAt(k++));
+                        revUserSubY = Character.getNumericValue(message.charAt(k++));
+                        revUserCentC = Character.getNumericValue(message.charAt(k++));
+                        revUserSubC = Character.getNumericValue(message.charAt(k++));
+                    }
 
-        }catch(Exception e){
-            //
-        }
+                }catch(IOException e){
+                    e.printStackTrace();
+                    Log.v("KKT", "서버 쪽 프레그먼트 : 설마 exception 내버린거??");
+                }
 
-        for(int i= 0; i<member-1; i++){
-            if(i != 0){
-                try {
+                for(int i= 0; i<member-1; i++){
+                    if(i != 0){
+                        try {
 
-                    Socket socket = sockets.get(i);
-                    final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                    out.write(message + "\n");
-                    out.flush();
+                            Socket socket = sockets.get(i);
+                            final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                            out.write("2send" + "\n");
+                            out.flush();
 
-                }catch(Exception e){
-                    //
+                            out.write(message + "\n");
+                            out.flush();
+
+                        }catch(Exception e){
+                            //
+                        }
+                    }
                 }
             }
-        }
+        };
+        thread.start();
 
 
         //            Bundle data = getActivity().getIntent().getExtras();
@@ -178,7 +203,9 @@ public class OtherPlayerFrg extends Fragment {
             if (revUserY >= 2 && revUserX <= 13)
                 gridState[revUserSubY][revUserSubX] = 6;
         }
+        Log.v("KKT", "rendering에서 여기까지 올까??");
 
+        Log.v("KKT", "그리드 스테이트 값은 : " + gridState);
         //int shape = 0;
         for(int i=2;i<14;i++)   // render current graphic
             for(int j=1;j<7;j++){

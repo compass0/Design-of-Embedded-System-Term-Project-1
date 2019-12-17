@@ -120,27 +120,35 @@ public class OtherPlayerFrgClient extends Fragment {
     }
 
     public void rendering(boolean stackmode){
-        try { // 데이터 수신부
+
+        Thread thread = new Thread(){
+            @Override
+            public void run(){
+                try { // 데이터 수신부
 //            final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 //            message = in.readLine();
 
-            if(message != null){
-                String[] revdata = message.split("");
-                int k = 0;
-                for (int i = 0; i < 15; i++)
-                    for (int j = 0; j < 8; j++)
-                        gridState[i][j] = Integer.parseInt(revdata[k++]);
-                revUserX = Integer.parseInt(revdata[k++]);
-                revUserY = Integer.parseInt(revdata[k++]);
-                revUserSubX = Integer.parseInt(revdata[k++]);
-                revUserSubY = Integer.parseInt(revdata[k++]);
-                revUserCentC = Integer.parseInt(revdata[k++]);
-                revUserSubC = Integer.parseInt(revdata[k++]);
-            }
+                    while(message != null){
+                        String[] revdata = message.split("");
+                        int k = 0;
+                        for (int i = 0; i < 15; i++)
+                            for (int j = 0; j < 8; j++)
+                                gridState[i][j] = Integer.parseInt(revdata[k++]);
+                        revUserX = Integer.parseInt(revdata[k++]);
+                        revUserY = Integer.parseInt(revdata[k++]);
+                        revUserSubX = Integer.parseInt(revdata[k++]);
+                        revUserSubY = Integer.parseInt(revdata[k++]);
+                        revUserCentC = Integer.parseInt(revdata[k++]);
+                        revUserSubC = Integer.parseInt(revdata[k++]);
+                    }
 
-        }catch(Exception e){
-            //
-        }
+                }catch(Exception e){
+                    //
+                }
+            }
+        };
+        thread.start();
+
 
 //        for(int i= 0; i<member-1; i++){
 //            if(i != 0){

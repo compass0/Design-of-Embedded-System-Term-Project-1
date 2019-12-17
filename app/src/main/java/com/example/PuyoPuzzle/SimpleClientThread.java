@@ -59,11 +59,12 @@ public class SimpleClientThread extends Thread {
                 myApp.setCurrentMember(Integer.parseInt(s));
             }
 
+
             myApp.setServerSocket(mSocket);
+            Log.v("KKT", "클라이언트 연결 했을때부터 제대로 소켓 들어갔나?? : " + myApp.getServerSocket());
 
             s = in.readLine();
             if(s.equals("start")){
-                gameMainAcitivity.finish();
                 Intent intent = new Intent(gameMainAcitivity, MainActivityForClient.class);
                 gameMainAcitivity.startActivity(intent);
             }
@@ -94,11 +95,7 @@ public class SimpleClientThread extends Thread {
             e.printStackTrace();
         }finally{
             if(mSocket != null){
-                try{
-                    mSocket.close();
-                }catch (IOException e){
-
-                }
+              Log.v("KKT", "이게 실행되나???");
             }
             mSocket = null;
             mShouldStop = true;
