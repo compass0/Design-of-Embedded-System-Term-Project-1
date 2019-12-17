@@ -119,14 +119,15 @@ public class MainActivityForServer extends AppCompatActivity {
             setContentView(R.layout.board_main);
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
-
-        fragmentManager = getFragmentManager();
-        fragmentTransaction1 = fragmentManager.beginTransaction();
-        fragmentTransaction1.replace(R.id.frame1, new OtherPlayerFrg(),"frag1").commit();
-        fragmentTransaction2 = fragmentManager.beginTransaction();
-        fragmentTransaction2.replace(R.id.frame2, new OtherPlayerFrg2(),"frag2").commit();
-        fragmentTransaction3 = fragmentManager.beginTransaction();
-        fragmentTransaction3.replace(R.id.frame3, new OtherPlayerFrg3(),"frag3").commit();
+        if(member != 1){
+            fragmentManager = getFragmentManager();
+            fragmentTransaction1 = fragmentManager.beginTransaction();
+            fragmentTransaction1.replace(R.id.frame1, new OtherPlayerFrg(),"frag1").commit();
+            fragmentTransaction2 = fragmentManager.beginTransaction();
+            fragmentTransaction2.replace(R.id.frame2, new OtherPlayerFrg2(),"frag2").commit();
+            fragmentTransaction3 = fragmentManager.beginTransaction();
+            fragmentTransaction3.replace(R.id.frame3, new OtherPlayerFrg3(),"frag3").commit();
+        }
         //--------------View initialization------------------------------------------
         for(int i=2;i<14;i++)
             for(int j=1;j<7;j++)

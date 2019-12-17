@@ -105,25 +105,6 @@ public class RoomActivity extends AppCompatActivity implements Serializable {
                             out.flush();
                         }
 
-//                        Socket socket = null;
-//                        socket = new Socket("192.168.0.1", 80);
-//                        final Socket finalSocket = socket;
-//
-//                        String ip0 = finalSocket.getInetAddress().toString();
-//                        ip0 = ip0.substring(1, ip0.length());
-//
-//
-//                        for(int i = 0; i<member-1; i++){
-//                            Socket socket = sockets.get(i);
-//                            final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-//                            out.write("ip" + "\n");
-//
-//
-//
-//                            out.write("")
-//                            out.flush();
-//                        }
-
 
                         MyApplication myApp = (MyApplication) getApplication();
                         myApp.setSockets(sockets);

@@ -9,6 +9,8 @@ import android.view.View;
 import android.widget.EditText;
 
 import java.io.IOException;
+import java.net.Socket;
+import java.util.ArrayList;
 
 public class GameMainActivity extends AppCompatActivity {
 
@@ -75,7 +77,8 @@ public class GameMainActivity extends AppCompatActivity {
 
     private void startSinglePlay() {
         Intent intent = new Intent(this, MainActivityForServer.class);
-        intent.putExtra("member", 1);
+        MyApplication myApp = (MyApplication) getApplication();
+        myApp.setCurrentMember(1);
         startActivity(intent);
     }
 
