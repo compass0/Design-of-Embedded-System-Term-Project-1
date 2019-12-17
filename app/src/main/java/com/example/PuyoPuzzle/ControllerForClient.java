@@ -1,8 +1,8 @@
 package com.example.PuyoPuzzle;
 import android.view.View;
 
-public class Controller implements View.OnClickListener{
-    MainActivity mainPointer;
+public class ControllerForClient implements View.OnClickListener{
+    MainActivityForClient mainPointer;
     User user;
     static final int TOP = 0 ,RIGHT = 1, BOTTOM = 2, LEFT = 3;
     static final int CMD_RIGHT = 0, CMD_LEFT =1, CMD_DOWN = 2, CMD_ROTATE = 3;
@@ -10,7 +10,7 @@ public class Controller implements View.OnClickListener{
     Thread pushClick;
     int button_num =0;
 
-    Controller(MainActivity pm, User pu){
+    ControllerForClient(MainActivityForClient pm, User pu){
         mainPointer = pm;
         user = pu;
 

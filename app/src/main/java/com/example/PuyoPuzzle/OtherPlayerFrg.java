@@ -1,7 +1,6 @@
 package com.example.PuyoPuzzle;
 
 import android.app.Fragment;
-import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -9,10 +8,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.ArrayList;
 
 public class OtherPlayerFrg extends Fragment {
     private static Handler mHandler ;
+    private String message;
+    private ArrayList<Socket> sockets;
+    private int member;
     View v;
 
     ImageView[][] grid = new ImageView[15][8];
@@ -105,23 +112,60 @@ public class OtherPlayerFrg extends Fragment {
     }
 
     public void rendering(boolean stackmode){
+        MyApplication myApp = (MyApplication) this.getActivity().getApplication();
+        ArrayList<Socket> sockets = myApp.getSockets();
+        member = myApp.getCurrentMember();
         try { // 데이터 수신부
-            Bundle data = getActivity().getIntent().getExtras();
-            int[] revdata = data.getIntArray("state");
+
+            Socket socket = sockets.get(0);
+            final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            message = in.readLine();
+
+            String[] revdata = message.split("");
             int k = 0;
             for (int i = 0; i < 15; i++)
                 for (int j = 0; j < 8; j++)
-                    gridState[i][j] = revdata[k++];
-            revUserX = data.getInt("userX");
-            revUserY = data.getInt("userY");
-            revUserSubX = data.getInt("subX");
-            revUserSubY = data.getInt("subY");
-            revUserCentC = data.getInt("centC");
-            revUserSubC = data.getInt("subC");
+                    gridState[i][j] = Integer.parseInt(revdata[k++]);
+            revUserX = Integer.parseInt(revdata[k++]);
+            revUserY = Integer.parseInt(revdata[k++]);
+            revUserSubX = Integer.parseInt(revdata[k++]);
+            revUserSubY = Integer.parseInt(revdata[k++]);
+            revUserCentC = Integer.parseInt(revdata[k++]);
+            revUserSubC = Integer.parseInt(revdata[k++]);
+
+
         }catch(Exception e){
             //
         }
 
+        for(int i= 0; i<member-1; i++){
+            if(i != 0){
+                try {
+
+                    Socket socket = sockets.get(i);
+                    final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                    out.write(message + "\n");
+                    out.flush();
+
+                }catch(Exception e){
+                    //
+                }
+            }
+        }
+
+
+        //            Bundle data = getActivity().getIntent().getExtras();
+//            int[] revdata = data.getIntArray("state");
+//            int k = 0;
+//            for (int i = 0; i < 15; i++)
+//                for (int j = 0; j < 8; j++)
+//                    gridState[i][j] = revdata[k++];
+//            revUserX = data.getInt("userX");
+//            revUserY = data.getInt("userY");
+//            revUserSubX = data.getInt("subX");
+//            revUserSubY = data.getInt("subY");
+//            revUserCentC = data.getInt("centC");
+//            revUserSubC = data.getInt("subC");
 
         if(!stackmode) {
             for (int i = 0; i < 14; i++)   // remove post user graphic

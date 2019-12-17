@@ -1,15 +1,12 @@
 package com.example.PuyoPuzzle;
 
-import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Point;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -19,11 +16,30 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivityForClient extends AppCompatActivity {
+    // KKT
+    private ArrayList<Socket> sockets;
+    private int member;
+    private String message1;
+    private String message2;
+    private String message3;
+    private Socket socket;
+    HashMap<Socket, String> socketMessageMap;
+    //
+
+
+
     static final int TOUCHMODE = 1, BOARDMODE =2;
     int mode = BOARDMODE;
 
@@ -70,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
     //Controll setting
     Button rotateBt,rightBt,leftBt,downBt,resetBt;
-    Controller mController;
+    ControllerForClient mController;
 
     static {
         System.loadLibrary("7segment");
@@ -90,6 +106,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // KKT
+        socketMessageMap = new HashMap<>();
+        MyApplication myApp = (MyApplication) getApplication();
+        member = myApp.getCurrentMember();
+
+        if(member > 1){
+            sockets = myApp.getSockets();
+        }
+        Log.v("KKT", "소켓이 받아와진다~~~ : " + sockets);
+        Log.v("KKT", "맴버도 맞는 값일까?? : " + member);
+        //
+
+
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         if(mode == TOUCHMODE)
             setContentView(R.layout.activity_main);
@@ -98,13 +127,31 @@ public class MainActivity extends AppCompatActivity {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
 
+        // KKT
+        OtherPlayerFrgClient otherPlayerFrgClient = new OtherPlayerFrgClient();
+        OtherPlayerFrg2Client otherPlayerFrg2Client = new OtherPlayerFrg2Client();
+        OtherPlayerFrg3Client otherPlayerFrg3Client = new OtherPlayerFrg3Client();
+
+        Bundle bundle = new Bundle(1); // 파라미터의 숫자는 전달하려는 값의 갯수
+        bundle.putString("message1", message1);
+        otherPlayerFrgClient.setArguments(bundle);
+
+        bundle = new Bundle(1); // 파라미터의 숫자는 전달하려는 값의 갯수
+        bundle.putString("message2", message2);
+        otherPlayerFrg2Client.setArguments(bundle);
+
+        bundle = new Bundle(1); // 파라미터의 숫자는 전달하려는 값의 갯수
+        bundle.putString("message3", message3);
+        otherPlayerFrg3Client.setArguments(bundle);
+
+
         fragmentManager = getFragmentManager();
         fragmentTransaction1 = fragmentManager.beginTransaction();
-        fragmentTransaction1.replace(R.id.frame1, new OtherPlayerFrg(),"frag1").commit();
+        fragmentTransaction1.replace(R.id.frame1, new OtherPlayerFrgClient(),"frag1").commit();
         fragmentTransaction2 = fragmentManager.beginTransaction();
-        fragmentTransaction2.replace(R.id.frame2, new OtherPlayerFrg2(),"frag2").commit();
+        fragmentTransaction2.replace(R.id.frame2, new OtherPlayerFrg2Client(),"frag2").commit();
         fragmentTransaction3 = fragmentManager.beginTransaction();
-        fragmentTransaction3.replace(R.id.frame3, new OtherPlayerFrg3(),"frag3").commit();
+        fragmentTransaction3.replace(R.id.frame3, new OtherPlayerFrg3Client(),"frag3").commit();
         //--------------View initialization------------------------------------------
         for(int i=2;i<14;i++)
             for(int j=1;j<7;j++)
@@ -128,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
         gameoverimg = (ImageView)findViewById(R.id.gameover);
 
         //---------- Control initialization ------------------------------------------
-        mController = new Controller(this,user);
+        mController = new ControllerForClient(this,user);
         if(mode == TOUCHMODE) {
             rotateBt = (Button) findViewById(R.id.rotate);
             rightBt = (Button) findViewById(R.id.btright);
@@ -215,21 +262,94 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void rendering(boolean stackmode){
+
         //data send to another user
         int[] senddata = new int[120];
         int k=0;
-        for(int i=0;i<15;i++)
-            for(int j=0;j<8;j++)
+        for(int i=0;i<15;i++){
+            for(int j=0;j<8;j++){
                 senddata[k++] = gridState[i][j];
-        Bundle data = new Bundle();
-        data.putIntArray("state",senddata);
-        data.putInt("userX",user.getUserX());
-        data.putInt("userY",user.getUserY());
-        data.putInt("subX",user.getSubX());
-        data.putInt("subY",user.getSubY());
-        data.putInt("centC",user.userCentColor);
-        data.putInt("subC",user.userSubColor);
-        getIntent().putExtras(data);
+            }
+        }
+
+        senddata[k++] = user.getUserX();
+        senddata[k++] = user.getUserY();
+        senddata[k++] = user.getSubX();
+        senddata[k++] = user.getSubY();
+        senddata[k++] = user.userCentColor;
+        senddata[k++] = user.userSubColor;
+
+
+        String senddata_s = Arrays.toString(senddata).replaceAll("[^0-9]","");
+
+        // KKT
+        MyApplication myApp = (MyApplication) getApplication();
+        socket = myApp.getServerSocket();
+        try{
+            final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            out.write(senddata_s + "\n");
+        }catch (Exception e){
+
+        }
+
+        for(int i =0; i<member-1; i++){
+            try { // 데이터 수신부
+                final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                String message = in.readLine();
+
+                if(message.equals("1send")){
+                    String message1 = in.readLine();
+                }
+
+                else if(message.equals("2send")){
+                    String message2 = in.readLine();
+                }
+
+                else if(message.equals("3send")){
+                    String message3 = in.readLine();
+                }
+
+            }catch(Exception e){
+                //
+            }
+        }
+
+
+//        for(int i = 0; i<member-1; i++){
+//            try{
+//                Socket socket = sockets.get(i);
+//                final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//                String message = in.readLine();
+//                socketMessageMap.put(socket, message);
+//            }catch(IOException e){
+//                e.printStackTrace();
+//            }
+//
+//        }
+
+//        for(int i = 0; i<member-1; i++){
+//            Socket socket = sockets.get(i);
+//            final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+//            out.write("start" + "\n");
+//            out.flush();
+//        }
+
+
+//        //data send to another user
+//        int[] senddata = new int[120];
+//        int k=0;
+//        for(int i=0;i<15;i++)
+//            for(int j=0;j<8;j++)
+//                senddata[k++] = gridState[i][j];
+//        Bundle data = new Bundle();
+//        data.putIntArray("state",senddata);
+//        data.putInt("userX",user.getUserX());
+//        data.putInt("userY",user.getUserY());
+//        data.putInt("subX",user.getSubX());
+//        data.putInt("subY",user.getSubY());
+//        data.putInt("centC",user.userCentColor);
+//        data.putInt("subC",user.userSubColor);
+//        getIntent().putExtras(data);
 
         if(!stackmode) {
             for (int i = 0; i < 14; i++)   // remove post user graphic

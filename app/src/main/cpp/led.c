@@ -14,7 +14,52 @@
 #include <android/log.h>
 
 JNIEXPORT void JNICALL
-Java_com_example_PuyoPuzzle_MainActivity_LedWrite (JNIEnv *jenv, jobject self, jint data){
+Java_com_example_PuyoPuzzle_MainActivityForServer_LedWrite (JNIEnv *jenv, jobject self, jint data){
+    int fd;
+    unsigned char ret;
+    int b1 = 165;
+    int b2 = 90;
+    int zero = 0;
+
+    if ((data < -1) || (data > 0xff)) {
+//        __android_log_print(ANDROID_LOG_ERROR, "LedWrite", "Out of range! \n");
+        return;
+    }
+
+    fd = open("/dev/led", O_RDWR);
+    if (fd < 0) {
+//        __android_log_print(ANDROID_LOG_ERROR, "LedWrite", "Device open error : /dev/led\n");
+        return;
+    }
+
+    if (data == -1) {
+        ret = write(fd, &b1, 1);
+        usleep(1000 * 200);
+        ret = write(fd, &b2, 1);
+        usleep(1000 * 200);
+        ret = write(fd, &b1, 1);
+        usleep(1000 * 200);
+        ret = write(fd, &b2, 1);
+        usleep(1000 * 200);
+        ret = write(fd, &zero, 1);
+    }
+    else {
+        ret = write(fd, &data, 1);
+        usleep(1000 * 200);
+        ret = write(fd, &zero, 1);
+        usleep(1000 * 200);
+        ret = write(fd, &data, 1);
+        usleep(1000 * 200);
+        ret = write(fd, &zero, 1);
+    }
+
+    close(fd);
+
+    return;
+}
+
+JNIEXPORT void JNICALL
+Java_com_example_PuyoPuzzle_MainActivityForClient_LedWrite (JNIEnv *jenv, jobject self, jint data){
     int fd;
     unsigned char ret;
     int b1 = 165;

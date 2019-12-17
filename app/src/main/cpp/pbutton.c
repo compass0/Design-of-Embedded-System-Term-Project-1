@@ -12,7 +12,30 @@
  * Class:     com_example__MainActivity
  * Method:    PbuttonRead
  */
-JNIEXPORT jint JNICALL Java_com_example_PuyoPuzzle_MainActivity_PbuttonRead
+JNIEXPORT jint JNICALL Java_com_example_PuyoPuzzle_MainActivityForServer_PbuttonRead
+        (JNIEnv *jenv, jobject self){
+    int fd;
+    unsigned char wordvalue;
+    unsigned char ret;
+
+    fd = open("/dev/pbutton", O_RDONLY);
+    if (fd < 0) {
+        //__android_log_print(ANDROID_LOG_ERROR, "PbuttonRead", "Device open error : /dev/pushbutton\n");
+        return -1;
+    }
+
+    ret = read(fd, &wordvalue, 1);
+    if (ret < 0) {
+        //__android_log_print(ANDROID_LOG_ERROR, "PbuttonRead", "Read Error!\n");
+        return -1;
+    }
+
+    close(fd);
+
+    return wordvalue;
+}
+
+JNIEXPORT jint JNICALL Java_com_example_PuyoPuzzle_MainActivityForClient_PbuttonRead
         (JNIEnv *jenv, jobject self){
     int fd;
     unsigned char wordvalue;

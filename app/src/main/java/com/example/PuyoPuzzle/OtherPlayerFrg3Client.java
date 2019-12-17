@@ -15,10 +15,10 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public class OtherPlayerFrg2 extends Fragment {
+public class OtherPlayerFrg3Client extends Fragment {
     private static Handler mHandler ;
     private String message;
-    private ArrayList<Socket> sockets;
+    private Socket socket;
     private int member;
     View v;
 
@@ -60,7 +60,14 @@ public class OtherPlayerFrg2 extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        v= inflater.inflate(R.layout.other2, container, false);
+        v= inflater.inflate(R.layout.other3, container, false);
+
+        // KKT
+        Bundle extra = this.getArguments();
+        if(extra != null) {
+            extra = getArguments();
+            message = extra.getString("message3");
+        }
 
         for (int i=0;i<15;i++) // State Initialization
             for(int j=0;j<8;j++) {
@@ -112,46 +119,42 @@ public class OtherPlayerFrg2 extends Fragment {
     }
 
     public void rendering(boolean stackmode){
-        MyApplication myApp = (MyApplication) this.getActivity().getApplication();
-        ArrayList<Socket> sockets = myApp.getSockets();
-        member = myApp.getCurrentMember();
         try { // 데이터 수신부
+//            final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//            message = in.readLine();
 
-            Socket socket = sockets.get(1);
-            final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            message = in.readLine();
-
-            String[] revdata = message.split("");
-            int k = 0;
-            for (int i = 0; i < 15; i++)
-                for (int j = 0; j < 8; j++)
-                    gridState[i][j] = Integer.parseInt(revdata[k++]);
-            revUserX = Integer.parseInt(revdata[k++]);
-            revUserY = Integer.parseInt(revdata[k++]);
-            revUserSubX = Integer.parseInt(revdata[k++]);
-            revUserSubY = Integer.parseInt(revdata[k++]);
-            revUserCentC = Integer.parseInt(revdata[k++]);
-            revUserSubC = Integer.parseInt(revdata[k++]);
-
+            if(message != null){
+                String[] revdata = message.split("");
+                int k = 0;
+                for (int i = 0; i < 15; i++)
+                    for (int j = 0; j < 8; j++)
+                        gridState[i][j] = Integer.parseInt(revdata[k++]);
+                revUserX = Integer.parseInt(revdata[k++]);
+                revUserY = Integer.parseInt(revdata[k++]);
+                revUserSubX = Integer.parseInt(revdata[k++]);
+                revUserSubY = Integer.parseInt(revdata[k++]);
+                revUserCentC = Integer.parseInt(revdata[k++]);
+                revUserSubC = Integer.parseInt(revdata[k++]);
+            }
 
         }catch(Exception e){
             //
         }
 
-        for(int i= 0; i<member-1; i++){
-            if(i != 1){
-                try {
-
-                    Socket socket = sockets.get(i);
-                    final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                    out.write(message + "\n");
-                    out.flush();
-
-                }catch(Exception e){
-                    //
-                }
-            }
-        }
+//        for(int i= 0; i<member-1; i++){
+//            if(i != 2){
+//                try {
+//
+//                    Socket socket = sockets.get(i);
+//                    final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+//                    out.write(message + "\n");
+//                    out.flush();
+//
+//                }catch(Exception e){
+//                    //
+//                }
+//            }
+//        }
 
 
         //            Bundle data = getActivity().getIntent().getExtras();
@@ -166,6 +169,7 @@ public class OtherPlayerFrg2 extends Fragment {
 //            revUserSubY = data.getInt("subY");
 //            revUserCentC = data.getInt("centC");
 //            revUserSubC = data.getInt("subC");
+
 
         if(!stackmode) {
             for (int i = 0; i < 14; i++)   // remove post user graphic
